@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # Copyright 2011 Eric Leblond <eric@regit.org>
 
-import sys
+import os,sys
 import re
 
 import threading
@@ -68,6 +68,10 @@ parser.add_argument('--server', default='192.168.2.2')
 parser.add_argument('--port', default=5432)
 parser.add_argument('--helper', default='ftp')
 args = parser.parse_args()
+
+# if not root...kick out
+if not os.geteuid()==0:
+    sys.exit("\nOnly root can run this script\n")
 
 if args.helper == 'ftp':
     ftptarget = ftp_helper()
