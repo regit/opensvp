@@ -1,1 +1,52 @@
-Opensvp is a security tool.
+=======
+Opensvp
+=======
+
+Introduction
+============
+
+Opensvp is a security tool. Its aim is to provide a tools to test the
+resistance of firewall to protocol level attack.
+
+For example, opensvp is able under some condition (see explanation
+below for details) to open a pin hole in a firewall protecting a
+ftp server.
+
+Lets have 192.168.2.3 a server running ftp, placed behind a firewall.
+If the user, as root, runs::
+
+ ./opensvp.py --server 192.168.2.3 --helper ftp --port 23 -v -i eth0
+
+Then he will have a temporary access on port 23 of the server independantly
+of the firewall rules.
+
+Attacking FTP
+=============
+
+This attack is now to work on Netfilter firewall if rp_filter is set to
+0. This is hopefully not the default value. This could work on other
+firewall but has not yet been tested.
+
+The idea is based on the fact that the connection tracking does not use
+the interface information.
+
+Condition:
+ * Attacker computer is on a network directly connected to the firewall.
+ * Firewall is sensible to the attack (for example, Netfilter with rp_filter
+   set to 0)
+
+The cinematic is the following :
+ 1. Attacker open a connection to an ftp server behind a firewall
+    with ftp helper activated
+ 2. A sniffer on the attacker network capture one packet coming from
+    the ftp server
+
+     1. it reverse the ethernet dst and src
+     2. it increase id in IP and seq for TCP
+     3. it set payload to the wanted 227 command (with selected
+        port)
+
+ 3. The forged packet is sent on the interface connected to the firewall
+ 4. Firewall transmit the packet back to the client and create an
+    expectation based on attacker input
+
