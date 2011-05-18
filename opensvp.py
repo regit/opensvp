@@ -67,17 +67,23 @@ class ftp_helper(attack_target):
             else:
                 sendp(att, iface=self.iface, verbose=0)
             self.sent = 1
+            self.cv.acquire()
+            self.cv.notify()
+            self.cv.release()
             sys.exit(0)
           
     def ftp_connect(self, option=''):
+        self.cv.acquire()
         sleep(1)
         if self.verbose:
             print "Starting ftp connection"
         ftp = ftplib.FTP(self.ip)
         ftp.login("anonymous", "opensvp")
-        sleep(2)
+        self.cv.wait()
+        self.cv.release()
 
     def run(self):
+        self.cv = threading.Condition()
         conn = threading.Thread(None, self.ftp_connect, args=(self,))
         conn.start()
         sniff(iface=ftptarget.iface, prn=ftptarget.ftp_from_server_callback, filter=ftptarget.build_filter(), store=0)
