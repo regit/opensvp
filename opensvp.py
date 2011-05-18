@@ -64,9 +64,9 @@ class ftp_helper(attack_target):
         sniff(iface=ftptarget.iface, prn=ftptarget.ftp_from_server_callback, filter=ftptarget.build_filter(), store=0)
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
-parser.add_argument('--server', default='192.168.2.2')
-parser.add_argument('--port', default=5432)
-parser.add_argument('--helper', default='ftp')
+parser.add_argument('--server', default='192.168.2.2', help='server to attack')
+parser.add_argument('--helper', default='ftp', help='protocol and helper to attack (default to ftp)')
+parser.add_argument('--port', default=5432, help='target port that should be open on server after attack')
 args = parser.parse_args()
 
 # if not root...kick out
