@@ -30,7 +30,7 @@ class attack_target:
     def __init__(self):
         self.ip = "192.168.2.2"
         self.port = "5432"
-        self.iface="vboxnet0"
+        self.iface="eth0"
         self.sent = 0
         self.verbose = False
 
@@ -84,9 +84,10 @@ class ftp_helper(attack_target):
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
-parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (default to ftp)')
+parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help="Show verbose output")
+parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (default to ftp)')
 args = parser.parse_args()
 
 # if not root...kick out
@@ -96,6 +97,7 @@ if not os.geteuid()==0:
 if args.helper == 'ftp':
     ftptarget = ftp_helper()
     ftptarget.ip = args.server
+    ftptarget.iface = args.iface
     ftptarget.port = int(args.port)
     ftptarget.verbose = args.verbose
     ftptarget.run()
