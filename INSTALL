@@ -1,0 +1,10 @@
+Installation is straightforward as there is none.
+
+This software depends on the following python module:
+ * scapy
+ * ftplib
+ * argparse
+
+On debian, the required packages can be installed with the following
+command line:
+ aptitude install python-scapy python-argparse python-pyftpdlib
