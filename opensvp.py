@@ -77,8 +77,13 @@ class ftp_helper(attack_target):
         sleep(1)
         if self.verbose:
             print "Starting ftp connection"
-        ftp = ftplib.FTP(self.ip)
-        ftp.login("anonymous", "opensvp")
+        try:
+            ftp = ftplib.FTP(self.ip)
+            ftp.login("anonymous", "opensvp")
+        except:
+            sys.stderr.write("Unable to open connection to ftp server\n")
+            self.cv.release()
+            sys.exit(0)
         self.cv.wait()
         self.cv.release()
 
@@ -86,7 +91,11 @@ class ftp_helper(attack_target):
         self.cv = threading.Condition()
         conn = threading.Thread(None, self.ftp_connect, args=(self,))
         conn.start()
-        sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=30)
+        try:
+            sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
+        except:
+            sys.stderr.write("Unable to sniff on interface\n")
+        
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
@@ -98,7 +107,8 @@ args = parser.parse_args()
 
 # if not root...kick out
 if not os.geteuid()==0:
-    sys.exit("\nOnly root can run this script\n")
+    sys.stderr.write("Need to be root to run the script\n")
+    sys.exit(1)
 
 if args.helper == 'ftp':
     ftptarget = ftp_helper()
