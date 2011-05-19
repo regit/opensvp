@@ -144,7 +144,7 @@ class irc_helper(attack_target):
 
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
-parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
+parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
 parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help="Show verbose output")
@@ -163,7 +163,7 @@ elif args.helper == 'irc':
 else:
     sys.exit("Selected protocol is currently unsupported")
 
-target.ip = args.server
+target.ip = args.target
 target.iface = args.iface
 target.port = int(args.port)
 target.verbose = args.verbose
