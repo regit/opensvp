@@ -86,7 +86,7 @@ class ftp_helper(attack_target):
         self.cv = threading.Condition()
         conn = threading.Thread(None, self.ftp_connect, args=(self,))
         conn.start()
-        sniff(iface=ftptarget.iface, prn=ftptarget.server_callback, filter=ftptarget.build_filter(), store=0)
+        sniff(iface=ftptarget.iface, prn=ftptarget.server_callback, filter=ftptarget.build_filter(), store=0, timeout=30)
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
 parser.add_argument('-s', '--server', default='192.168.2.2', help='IP address of server to attack')
