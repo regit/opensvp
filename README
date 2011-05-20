@@ -10,7 +10,9 @@ resistance of firewall to protocol level attack.
 
 For example, opensvp is able under some condition (see explanation
 below for details) to open a pin hole in a firewall protecting a
-ftp server.
+ftp server: even if the filtering policy garantee that only the 21
+port is open to the server, you can open 'any' port on the server
+by using opensvp.
 
 Lets have 192.168.2.3 a server running ftp, placed behind a firewall.
 If the user, as root, runs::
@@ -20,33 +22,62 @@ If the user, as root, runs::
 Then he will have a temporary access on port 23 of the server independantly
 of the firewall rules.
 
-Attacking FTP
-=============
+
+Attack Description
+==================
+Principle
+---------
+
+Some network protocols are using multiple connections  for the exchange
+between a client and a server. The most known example is ftp where command
+goes through a connection on port 21 and where data exchange are done with
+two different mode (connection from port 20 or dynamic connection).
+
+Some firewall implementation implement application layer gateway (ALG) to be
+able to detect this parallel connection and be able to autorize them dynamically.
+Other solutions are to use application relay (transparent proxy) or to open
+all the possible flow (read almost everything).
+
+The ALG analyse the traffic and detect and parse the command sent between the
+peers to declare the parameters of the parallel connections. Once done they
+open temporary pin hole in the firewall to let the probable traffic goes through.
+
+The idea of this attack is to forge this type of messages to open pin hole in
+the firewall but pin hole that should not have been open.
 
 This attack is now to work on Netfilter firewall if rp_filter is set to
-0. This is hopefully not the default value. This could work on other
+0 (this is hopefully not the default value). This could work on other
 firewall but has not yet been tested.
-
-The idea is based on the fact that the connection tracking does not use
-the interface information.
 
 Condition:
  * Attacker computer is on a network directly connected to the firewall.
  * Firewall is sensible to the attack (for example, Netfilter with rp_filter
    set to 0)
+ * Attacker is able to sniff data packet (or by pcap sniffing or by running
+   himself a data connection)
 
 The cinematic is the following :
- 1. Attacker open a connection to an ftp server behind a firewall
-    with ftp helper activated
- 2. A sniffer on the attacker network capture one packet coming from
-    the ftp server
+ 1. Sniffer on the attacker network capture one packet from the protocol flow
 
-     1. it reverse the ethernet dst and src
-     2. it increase id in IP and seq for TCP
-     3. it set payload to the wanted 227 command (with selected
-        port)
+     * it reverse the ethernet dst and src
+     * it increase id in IP and seq for TCP
+     * it set payload to the wanted command (with selected
+       port)
 
- 3. The forged packet is sent on the interface connected to the firewall
- 4. Firewall transmit the packet back to the client and create an
-    expectation based on attacker input
+ 2. The forged packet is sent on the interface connected to the firewall
+ 3. Firewall transmit the packet back to the client and is now expecting
+    a packet with caracteristic based on attacker input
+
+Attacking IRC
+-------------
+
+This attack is a direct application of the described principle. Once data packet
+is received, the attacker send a forged DCC command.
+
+Attacking FTP
+-------------
+
+In this attack, the client connection is open by the attacker. He connect to the
+ftp server behind a firewall and initiate a real connection. Once the session is
+setup, he launch the attack by sending a forged 227 command.
 
