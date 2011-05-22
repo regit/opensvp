@@ -47,7 +47,8 @@ the firewall but pin hole that should not have been open.
 
 This attack is now to work on Netfilter firewall if rp_filter is set to
 0 (this is hopefully not the default value). This could work on other
-firewall but has not yet been tested.
+firewall but has not yet been tested. As there is no rp_filter for IPv6,
+the protection has to be setup in the firewall rules.
 
 Condition:
  * Attacker computer is on a network directly connected to the firewall.
@@ -81,3 +82,4 @@ In this attack, the client connection is open by the attacker. He connect to the
 ftp server behind a firewall and initiate a real connection. Once the session is
 setup, he launch the attack by sending a forged 227 command.
 
+If IPv6 is used, the same attack is done with a forged 229 command.
