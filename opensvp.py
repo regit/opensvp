@@ -98,7 +98,7 @@ class ftp_helper(attack_target):
         return "src host %s and src port 21" % (self.ip)
 
     def inject_condition(self,pkt):
-        if re.match("230",pkt.sprintf("%TCP.payload%")):
+        if re.match("^220",pkt.sprintf("%TCP.payload%")):
             return True
         return False
 
@@ -119,7 +119,6 @@ class ftp_helper(attack_target):
             print "Starting ftp connection"
         try:
             ftp = ftplib.FTP(self.ip)
-            ftp.login("anonymous", "opensvp")
         except:
             sys.stderr.write("Unable to open connection to ftp server\n")
             self.cv.release()
