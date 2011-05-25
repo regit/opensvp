@@ -97,3 +97,10 @@ out of the box). Thus it is possible to use something like for each interface ::
 
  ip6tables -I FORWARD -i eth0 -o eth0 -j DROP
 
+Another solution is to use standard antispoofing rules : if DMZ is a network
+where we have vulnerable protocol/server running, we can add :;
+
+ ip6tables -I FORWARD -i ! $NET_IFACE -s $IP_NET -j DROP
+
+This last solution is harder to setup because you need to know the network
+topology but this is the only bullet proof solution.
