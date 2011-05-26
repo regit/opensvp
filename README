@@ -1,14 +1,15 @@
-=======
-Opensvp
-=======
+============================================
+Opensvp and application layer gateway attack
+============================================
 
 Introduction
 ============
 
-Opensvp is a security tool. Its aim is to provide a tools to test the
-resistance of firewall to protocol level attack.
+Opensvp is a security tool implementing some new attack. Its aim is to provide
+ a tools to test the resistance of firewall to protocol level attack. It
+implements some new kind of attack against application layer gateway.
 
-For example, opensvp is able under some condition (see explanation
+For example, opensvp is able under some conditions (see explanation
 below for details) to open a pin hole in a firewall protecting a
 ftp server: even if the filtering policy garantee that only the 21
 port is open to the server, you can open 'any' port on the server
@@ -45,10 +46,6 @@ open temporary pin hole in the firewall to let the probable traffic goes through
 The idea of this attack is to forge this type of messages to open pin hole in
 the firewall but pin hole that should not have been open.
 
-This attack is now to work on Netfilter firewall if rp_filter is set to
-0 (this is hopefully not the default value). This could work on other
-firewall but has not yet been tested. As there is no rp_filter for IPv6,
-the protection has to be setup in the firewall rules.
 
 Condition:
  * Attacker computer is on a network directly connected to the firewall.
@@ -84,6 +81,35 @@ setup, he launch the attack by sending a forged 227 command.
 
 If IPv6 is used, the same attack is done with a forged 229 command.
 
+Impact of the attack
+====================
+Possible target
+---------------
+
+The main contraint about these attack is that the attacker has to be on a network
+directly connected to the firewall. Thus, the main possibilities are :
+ * Attack from a user LAN
+ * Attack in a hosting farm
+Both case can lead to severe information exposure by giving the attacker access to
+unprotected services.
+
+Linux
+-----
+
+This attack is known to work on IPv4 Netfilter firewall if rp_filter is set to
+0 (this is hopefully not the default value).
+
+There is currently no reverse path filtering implementation for IPv6, the firewall
+is thus not protected and the protection has to be setup in the firewall rules (see
+next chapter).
+
+Some firewall software are known to be vulnerable :
+ * fwbuilder: a specific policy has to be set up
+ * shorewall: vulnerable, developpement is in progress to fix it
+ * edenwall: vulnerable
+
+The attacks work for both gateway and local firewall.
+
 Defense against the attack
 ==========================
 Linux
@@ -93,9 +119,12 @@ rp_filter is enough for protection in IPv4. Check that you have rp_filter set
 to 1 on all the interfaces that can be subject to the attack. For IPv6, the
 situation is more complicated, the solution is to block the transmission of
 the attack on the firewall (the expectation is created when the packet get
-out of the box). Thus it is possible to use something like for each interface ::
+out of the box). Thus it is possible to use something like the following rule
+for each interface ::
 
  ip6tables -I FORWARD -i eth0 -o eth0 -j DROP
+
+This rule has to be put before any accept all packet from ESTABLISHED connection.
 
 Another solution is to use standard antispoofing rules : if DMZ is a network
 where we have vulnerable protocol/server running, we can add :;
