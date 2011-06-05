@@ -108,7 +108,9 @@ Some firewall software are known to be vulnerable :
  * shorewall: vulnerable, developpement is in progress to fix it
  * edenwall: vulnerable
 
-The attacks work for both gateway and local firewall.
+The attack works for both gateway and local firewall. On a local firewall, FORWARD
+filtering has to be activated and a ESTABLISHED ACCEPT rules has to be set up on
+this chain.
 
 Defense against the attack
 ==========================
