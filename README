@@ -6,7 +6,7 @@ Introduction
 ============
 
 Opensvp is a security tool implementing some new attack. Its aim is to provide
- a tools to test the resistance of firewall to protocol level attack. It
+a tools to test the resistance of firewall to protocol level attack. It
 implements some new kind of attack against application layer gateway.
 
 For example, opensvp is able under some conditions (see explanation
@@ -87,9 +87,12 @@ Possible target
 ---------------
 
 The main contraint about these attack is that the attacker has to be on a network
-directly connected to the firewall. Thus, the main possibilities are :
+directly connected to the firewall.
+
+Thus, the main possibilities are:
  * Attack from a user LAN
  * Attack in a hosting farm
+
 Both case can lead to severe information exposure by giving the attacker access to
 unprotected services.
 
@@ -103,14 +106,14 @@ There is currently no reverse path filtering implementation for IPv6, the firewa
 is thus not protected and the protection has to be setup in the firewall rules (see
 next chapter).
 
-Some firewall software are known to be vulnerable :
+Some firewall software are known to be vulnerable:
  * fwbuilder: a specific policy has to be set up
  * shorewall: vulnerable, developpement is in progress to fix it
  * edenwall: vulnerable
 
 The attack works for both gateway and local firewall. On a local firewall, FORWARD
 filtering has to be activated and a ESTABLISHED ACCEPT rules has to be set up on
-this chain.
+this chain. This could be the case of system running virtual machine.
 
 Defense against the attack
 ==========================
@@ -128,8 +131,18 @@ for each interface ::
 
 This rule has to be put before any accept all packet from ESTABLISHED connection.
 
+A similar but less intrusive way to do is the work on the FORWARD mangle table ::
+
+ iptables -N ANTISPOOF
+ iptables -A ANTISPOOF -j NFLOG --nflog-prefix "Spoofing attempt"
+ iptables -A ANTISPOOF -j DROP
+ for IFACE in IFACE_LIST; do
+   iptables -A ANTISPOOF -i IFACE ! -o IFACE -j RETURN
+ done
+ iptables -I FORWARD  -t mangle -j ANTISPOOF
+
 Another solution is to use standard antispoofing rules : if DMZ is a network
-where we have vulnerable protocol/server running, we can add :;
+where we have vulnerable protocol/server running, we can add ::
 
  ip6tables -I FORWARD -i ! $NET_IFACE -s $IP_NET -j DROP
 
