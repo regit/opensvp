@@ -88,7 +88,7 @@ class attack_target:
 
     def run(self):
         self.initialize()
-        sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=20)
+        sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=40)
 
 class ftp_helper(attack_target):
     def build_command(self):
