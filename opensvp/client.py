@@ -19,5 +19,35 @@
 # simple client: connect to a server for a protocol and send
 # a command activating helper to it.
 
-class generic_conn:
-    
+class generic_client:
+    def __init__(self, ip, srv_port, port, verbose = False):
+        self.ip = ip
+        self.srv_port = srv_port
+        self.port = port
+        self.l3proto = 'IPv4'
+        self.verbose = verbose
+
+    def connect(self):
+
+    def send_command(self):
+        send(self.conn, self.message)
+
+    def run(self):
+
+    def build_command(self):
+        return ""
+
+class irc(generic_client):
+    def build_command(self):
+        return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
+
+class ftp(generic_client):
+    def build_command(self):
+        return "Banzai"
+
+class ftp6(generic_client):
+    def __init__(self, iface, ip, port, verbose = False):
+        ftp.__init__(self, iface, ip, port, verbose)
+        self.l3proto = "IPv6"
+    def build_command(self):
+        return "Banzai"

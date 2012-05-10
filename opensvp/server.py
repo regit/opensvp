@@ -19,4 +19,23 @@
 # the NATed information to the user.
 
 class generic_server:
- 
+     def __init__(self, ip, port, verbose = False):
+        self.ip = ip
+        self.port = port
+        self.l3proto = 'IPv4'
+        self.verbose = verbose
+
+    def listen(self):
+
+    def decode_command(self):
+        send(self.conn, self.message)
+
+    def run(self):
+
+class irc(generic_client):
+    def decode_command(self):
+        return "Banzai"
+
+class ftp(generic_client):
+    def decode_command(self):
+        return "Banzai"
