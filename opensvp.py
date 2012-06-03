@@ -24,6 +24,7 @@ parser.add_argument('-c', '--client', default=False, action="store_true", help='
 parser.add_argument('-a', '--attacker', default=False, action="store_true", help='Work in attacker mode (spoofing attack)')
 parser.add_argument('-d', '--decode', default=False, help='Decode protocol message to extract IP params')
 parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
+parser.add_argument('-b', '--bind', default='', help='IP address to bind to')
 parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help="Show verbose output")
@@ -41,11 +42,11 @@ if args.server == True:
         sys.exit("Server, client, attacker mode are exclusive: leaving")
     import opensvp.server
     if args.helper == 'ftp':
-        target = opensvp.server.ftp(21, verbose=args.verbose)
+        target = opensvp.server.ftp(args.bind, 21, verbose=args.verbose)
     elif args.helper == 'irc':
-        target = opensvp.server.irc(6667, verbose=args.verbose)
+        target = opensvp.server.irc(args.bind, 6667, verbose=args.verbose)
     elif args.helper == 'ftp6':
-        target = opensvp.server.ftp6(21, verbose=args.verbose)
+        target = opensvp.server.ftp6(args.bind, 21, verbose=args.verbose)
     else:
         sys.exit("Selected protocol is currently unsupported")
 

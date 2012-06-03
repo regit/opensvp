@@ -21,17 +21,18 @@
 import socket, struct, re
 
 class generic_server:
-    def __init__(self, port, verbose = False):
+    def __init__(self, ip, port, verbose = False):
         self.port = port
         self.family = socket.AF_INET
         self.verbose = verbose
         self.conn = None
         self.message = None
+        self.ip = ip
 
     def listen(self):
         self.conn = socket.socket(self.family, socket.SOCK_STREAM)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.conn.bind(('', self.port))
+        self.conn.bind((self.ip, self.port))
         self.conn.listen(1)
         conn, addr = self.conn.accept()
         self.message = conn.recv(1024)        
@@ -62,8 +63,8 @@ class ftp(generic_server):
         return ('.'.join(rsplit[0:4]), int(rsplit[4]) * 256 + int(rsplit[5]))
 
 class ftp6(generic_server):
-    def __init__(self, port, verbose = False):
-        generic_server.__init__(self, port, verbose)
+    def __init__(self, ip, port, verbose = False):
+        generic_server.__init__(self, ip, port, verbose)
         self.family = socket.AF_INET6
 
     def decode_command(self):
