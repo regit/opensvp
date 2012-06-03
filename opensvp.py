@@ -35,7 +35,15 @@ if args.helper not in ['ftp', 'ftp6', 'irc']:
 
 if args.server == True:
     import opensvp.server
-    sys.exit("Server currently unsupported")
+    if args.helper == 'ftp':
+        target = opensvp.server.ftp(21, verbose=args.verbose)
+    elif args.helper == 'irc':
+        target = opensvp.server.irc(6667, verbose=args.verbose)
+    elif args.helper == 'ftp6':
+        target = opensvp.server.ftp6(21, verbose=args.verbose)
+    else:
+        sys.exit("Selected protocol is currently unsupported")
+
 elif args.client == True:
     import opensvp.client
     if args.helper == 'ftp':
