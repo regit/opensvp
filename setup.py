@@ -2,14 +2,14 @@
 from setuptools import setup
 
 setup(name='opensvp',
-      version='0.2',
+      version='0.3',
       description='Application layer gateway testing tool',
       author='Eric Leblond',
       author_email='eric@regit.org',
       url='https://home.regit.org/software/opensvp/',
       scripts=['opensvp'],
       packages=['opensvp'],
-      package_dir={'opensvp':'lib/'},
+      package_dir={'opensvp':'src'},
       provides=['opensvp'],
       requires=['argparse', 'scapy', 'ftplib'],
       classifiers=[
