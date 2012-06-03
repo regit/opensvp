@@ -19,9 +19,9 @@ import os,sys
 import argparse
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
+parser.add_argument('-a', '--attacker', default=False, action="store_true", help='Work in attacker mode (spoofing attack)')
 parser.add_argument('-s', '--server', default=False, action="store_true", help='Work in server mode')
 parser.add_argument('-c', '--client', default=False, action="store_true", help='Work in client mode')
-parser.add_argument('-a', '--attacker', default=False, action="store_true", help='Work in attacker mode (spoofing attack)')
 parser.add_argument('-d', '--decode', default=False, help='Decode protocol message to extract IP params')
 parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
 parser.add_argument('-b', '--bind', default='', help='IP address to bind to')

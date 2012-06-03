@@ -19,6 +19,7 @@
 # the NATed information to the user.
 
 import socket, struct, re
+import os
 
 class generic_server:
     def __init__(self, ip, port, verbose = False):
@@ -30,6 +31,8 @@ class generic_server:
         self.ip = ip
 
     def listen(self):
+        if self.port < 1024 and not os.geteuid()==0:
+            raise Exception('Need to be root')
         self.conn = socket.socket(self.family, socket.SOCK_STREAM)
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn.bind((self.ip, self.port))
@@ -43,7 +46,12 @@ class generic_server:
         return self.message
 
     def run(self):
-        self.listen()
+        try:
+            self.listen()
+        except socket.error:
+            print socket.error.string
+        except Exception, err:
+            print err
         if self.verbose:
             print "Received: %s" % self.message
         return self.decode_command()
