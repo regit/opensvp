@@ -156,7 +156,7 @@ next chapter).
 
 Some firewall software are known to be vulnerable:
  * fwbuilder: a specific policy has to be set up
- * shorewall: vulnerable, developpement is in progress to fix it
+ * shorewall: recent version fix the issue
  * edenwall: vulnerable
 
 The attack works for both gateway and local firewall. On a local firewall, FORWARD
