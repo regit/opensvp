@@ -93,5 +93,10 @@ elif args.attacker == True:
         sys.exit("Selected protocol is currently unsupported")
 
 ret = target.run()
+if ret is None:
+    sys.exit("Error during process")
+
 if args.server == True:
     print "You should be able to connect to %s:%d" % ret
+if args.client == True:
+    print "%s should be opened from outside" % ret

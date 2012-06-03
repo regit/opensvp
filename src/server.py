@@ -39,6 +39,8 @@ class generic_server:
         self.conn.listen(1)
         conn, addr = self.conn.accept()
         self.message = conn.recv(1024)        
+        res = self.decode_command()
+        conn.sendall("%s:%d" %res)
         conn.close()
         self.conn.close()
 

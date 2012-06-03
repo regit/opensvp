@@ -35,14 +35,16 @@ class generic_client:
 
     def send_command(self):
         self.conn.sendall(self.message)
+        data = self.conn.recv(1024)
         self.conn.close()
+        return data
 
     def run(self):
         self.connect()
         self.message = self.build_command()
         if self.verbose:
             print "Attack message:\n%s\n" % self.message
-        self.send_command()
+        return self.send_command()
 
     def build_command(self):
         return ""
