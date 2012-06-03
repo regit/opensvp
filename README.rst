@@ -1,13 +1,14 @@
-============================================
-Opensvp and application layer gateway attack
-============================================
+=======
+Opensvp
+=======
 
 Introduction
 ============
 
-Opensvp is a security tool implementing some new attack. Its aim is to provide
-a tools to test the resistance of firewall to protocol level attack. It
-implements some new kind of attack against application layer gateway.
+Opensvp is a security tool implementing "attacks" to be able to the
+resistance of firewall to protocol level attack. It implements
+classic attacks as well as some new kind of attacks against application
+layer gateway.
 
 For example, opensvp is able under some conditions (see explanation
 below for details) to open a pin hole in a firewall protecting a
@@ -18,14 +19,60 @@ by using opensvp.
 Lets have 192.168.2.3 a server running ftp, placed behind a firewall.
 If the user, as root, runs::
 
- ./opensvp.py --server 192.168.2.3 --helper ftp --port 23 -v -i eth0
+ opensvp --attacker -t 192.168.2.3 --helper ftp --port 23 -v -i eth0
 
 Then he will have a temporary access on port 23 of the server independantly
 of the firewall rules.
 
+The document "Secure use of iptables and connection tracking helpers" 
+https://home.regit.org/netfilter-en/secure-use-of-helpers/ describe
+the protection method against this type of attack.
 
-Attack Description
-==================
+Implemented attacks
+===================
+
+Spoofed attack on helpers
+-------------------------
+
+See the following chapter for a precise description of the implemented attack.
+
+Being on a network directly connected to the firewall via the eth0 interface,
+the attacker can run the following command ::
+
+ opensvp --attacker -t 192.168.2.3 --helper ftp --port 23 -v -i eth0
+
+192.168.2.3 is the address of the FTP server and 23 is the port we want to
+open on the server.
+
+It is then possible to connect to 192.168.2.3 on port 23 after a successful
+attack.
+
+Abusive usage of helpers
+------------------------
+
+It is possible for a client to send a forged command message which is interpreted
+as possible dynamic connection opening by the firewalls.
+
+It is possible to use a standard server to send the attack but with a custom server
+you will know the transformation made by the possible NAT gateway.
+
+A typical session is the following. On the server which has IP address 1.2.3.4, you
+can run ::
+
+ opensvp --server --helper irc -v
+
+On the client, you can then run ::
+
+ opensvp --client -t 1.2.3.4 --helper irc --port 23 -v
+
+On the server, the following message is displayed ::
+
+ You should be able to connect to 2.3.4.5:23
+
+Here 2.3.4.5 is the public address of the client.
+
+Description of the attack against helper
+========================================
 Principle
 ---------
 
@@ -82,9 +129,9 @@ setup, he launch the attack by sending a forged 227 command.
 If IPv6 is used, the same attack is done with a forged 229 command.
 
 Impact of the attack
-====================
+--------------------
 Possible target
----------------
+~~~~~~~~~~~~~~~
 
 The main contraint about these attack is that the attacker has to be on a network
 directly connected to the firewall.
@@ -97,7 +144,7 @@ Both case can lead to severe information exposure by giving the attacker access 
 unprotected services.
 
 Linux
------
+~~~~~
 
 This attack is known to work on IPv4 Netfilter firewall if rp_filter is set to
 0 (this is hopefully not the default value).
@@ -116,9 +163,9 @@ filtering has to be activated and a ESTABLISHED ACCEPT rules has to be set up on
 this chain. This could be the case of system running virtual machine.
 
 Defense against the attack
-==========================
+--------------------------
 Linux
------
+~~~~~
 
 rp_filter is enough for protection in IPv4. Check that you have rp_filter set
 to 1 on all the interfaces that can be subject to the attack. For IPv6, the
