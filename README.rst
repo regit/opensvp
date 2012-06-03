@@ -8,7 +8,7 @@ Introduction
 Opensvp is a security tool implementing "attacks" to be able to the
 resistance of firewall to protocol level attack. It implements
 classic attacks as well as some new kind of attacks against application
-layer gateway.
+layer gateway (called helper in the Netfilter world).
 
 For example, opensvp is able under some conditions (see explanation
 below for details) to open a pin hole in a firewall protecting a
@@ -59,11 +59,12 @@ you will know the transformation made by the possible NAT gateway.
 A typical session is the following. On the server which has IP address 1.2.3.4, you
 can run ::
 
- opensvp --server --helper irc -v
+ $ opensvp --server --helper irc -v
 
 On the client, you can then run ::
 
- opensvp --client -t 1.2.3.4 --helper irc --port 23 -v
+ $ opensvp --client -t 1.2.3.4 --helper irc --port 23 -v
+ 2.3.4.5:23 should be opened from outside
 
 On the server, the following message is displayed ::
 
@@ -167,31 +168,9 @@ Defense against the attack
 Linux
 ~~~~~
 
-rp_filter is enough for protection in IPv4. Check that you have rp_filter set
-to 1 on all the interfaces that can be subject to the attack. For IPv6, the
-situation is more complicated, the solution is to block the transmission of
-the attack on the firewall (the expectation is created when the packet get
-out of the box). Thus it is possible to use something like the following rule
-for each interface ::
+See the following document which is dedicated to the subject: https://home.regit.org/netfilter-en/secure-use-of-helpers/
 
- ip6tables -I FORWARD -i eth0 -o eth0 -j DROP
+Other OS and devices
+~~~~~~~~~~~~~~~~~~~~
 
-This rule has to be put before any accept all packet from ESTABLISHED connection.
-
-A similar but less intrusive way to do is the work on the FORWARD mangle table ::
-
- iptables -N ANTISPOOF
- iptables -A ANTISPOOF -j NFLOG --nflog-prefix "Spoofing attempt"
- iptables -A ANTISPOOF -j DROP
- for IFACE in IFACE_LIST; do
-   iptables -A ANTISPOOF -i IFACE ! -o IFACE -j RETURN
- done
- iptables -I FORWARD  -t mangle -j ANTISPOOF
-
-Another solution is to use standard antispoofing rules : if DMZ is a network
-where we have vulnerable protocol/server running, we can add ::
-
- ip6tables -I FORWARD -i ! $NET_IFACE -s $IP_NET -j DROP
-
-This last solution is harder to setup because you need to know the network
-topology but this is the only bullet proof solution.
+The basic requirement is to activate strict anti-spoofing and to control the loading of ALG is possible.
