@@ -25,15 +25,12 @@ class generic_client:
         self.ip = ip
         self.srv_port = srv_port
         self.port = port
-        self.l3proto = 'IPv4'
+        self.family = socket.AF_INET
         self.verbose = verbose
         self.conn = None
 
     def connect(self):
-        family = socket.AF_INET
-        if not self.l3proto == 'IPv4':
-            family = socket.AF_INET6
-        self.conn = socket.socket(family, socket.SOCK_STREAM)
+        self.conn = socket.socket(self.family, socket.SOCK_STREAM)
         self.conn.connect((self.ip, self.srv_port))
 
     def send_command(self):
@@ -42,7 +39,6 @@ class generic_client:
 
     def run(self):
         self.connect()
-        print str(self.conn)
         self.message = self.build_command()
         if self.verbose:
             print "Attack message:\n%s\n" % self.message
@@ -58,6 +54,7 @@ class irc(generic_client):
         while ip:
             ipn=(ipn<<8)+int(ip.pop(0))
         return ipn
+
     def build_command(self):
         (ipaddr, port) = self.conn.getsockname()
         return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(ipaddr), self.port)
@@ -69,8 +66,9 @@ class ftp(generic_client):
 
 class ftp6(generic_client):
     def __init__(self, iface, ip, port, verbose = False):
-        ftp.__init__(self, iface, ip, port, verbose)
-        self.l3proto = "IPv6"
+        generic_client.__init__(self, iface, ip, port, verbose)
+        self.family = socket.AF_INET6
+
     def build_command(self):
-        (ipaddr, port) = self.conn.getsockname()
+        (ipaddr, port, a, b) = self.conn.getsockname()
         return 'EPRT |2|%s|%d|\r\n' % (ipaddr, self.port)

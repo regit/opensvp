@@ -23,13 +23,14 @@ import socket, struct, re
 class generic_server:
     def __init__(self, port, verbose = False):
         self.port = port
-        self.l3proto = 'IPv4'
+        self.family = socket.AF_INET
         self.verbose = verbose
         self.conn = None
         self.message = None
 
     def listen(self):
-        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn = socket.socket(self.family, socket.SOCK_STREAM)
+        self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn.bind(('', self.port))
         self.conn.listen(1)
         conn, addr = self.conn.accept()
@@ -56,4 +57,17 @@ class irc(generic_server):
 
 class ftp(generic_server):
     def decode_command(self):
-        return "Banzai"
+        r = re.search('PORT ([\d,]+)\r\n', self.message)
+        rsplit = r.group(1).split(',')
+        return ('.'.join(rsplit[0:4]), int(rsplit[4]) * 256 + int(rsplit[5]))
+
+class ftp6(generic_server):
+    def __init__(self, port, verbose = False):
+        generic_server.__init__(self, port, verbose)
+        self.family = socket.AF_INET6
+
+    def decode_command(self):
+        r = re.search("EPRT \|2\|(.+)\|(\d+)\|\r\n", self.message)
+        return (r.group(1), int(r.group(2)))
+
+
