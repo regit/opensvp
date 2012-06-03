@@ -69,4 +69,6 @@ elif args.attacker == True:
     else:
         sys.exit("Selected protocol is currently unsupported")
 
-target.run()
+ret = target.run()
+if args.server == True:
+    print "You should be able to connect to %s:%d" % ret
