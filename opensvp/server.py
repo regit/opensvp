@@ -28,7 +28,6 @@ class generic_server:
     def listen(self):
 
     def decode_command(self):
-        send(self.conn, self.message)
 
     def run(self):
 

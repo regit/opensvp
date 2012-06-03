@@ -16,12 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os,sys
-import re
-
 import argparse
-import opensvp.helper
 
 parser = argparse.ArgumentParser(description='Open selected pin hole in firewall')
+parser.add_argument('-s', '--server', default=False, action="store_true", help='work on server side')
+parser.add_argument('-c', '--client', default=False, action="store_true", help='work on client side')
+parser.add_argument('-a', '--attacker', default=True, action="store_true", help='work as attacker (spoofing attack)')
+parser.add_argument('-d', '--decode', default=False, help='Decode protocol message to extract IP params')
 parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
 parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
@@ -29,18 +30,35 @@ parser.add_argument('-v', '--verbose', default=False, action="store_true", help=
 parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (ftp [default], ftp6, irc)')
 args = parser.parse_args()
 
-# if not root...kick out
-if not os.geteuid()==0:
-    sys.stderr.write("Need to be root to run the script\n")
-    sys.exit(1)
+if args.helper not in ['ftp', 'ftp6', 'irc']:
+    sys.exit("Selected protocol '%s' is not supported" % (args.helper))
 
-if args.helper == 'ftp':
-    target = opensvp.helper.ftp(args.iface, args.target, int(args.port), verbose=args.verbose)
-elif args.helper == 'irc':
-    target = opensvp.helper.irc(args.iface, args.target, int(args.port), verbose=args.verbose)
-elif args.helper == 'ftp6':
-    target = opensvp.helper.ftp6(args.iface, args.target, int(args.port), verbose=args.verbose)
-else:
-    sys.exit("Selected protocol is currently unsupported")
+if args.server == True:
+    import opensvp.server
+    sys.exit("Server currently unsupported")
+elif args.client == True:
+    import opensvp.client
+    if args.helper == 'ftp':
+        target = opensvp.client.ftp(args.target, 21, int(args.port), verbose=args.verbose)
+    elif args.helper == 'irc':
+        target = opensvp.client.irc(args.target, 6667, int(args.port), verbose=args.verbose)
+    elif args.helper == 'ftp6':
+        target = opensvp.client.ftp6(args.target, 21, int(args.port), verbose=args.verbose)
+    else:
+        sys.exit("Selected protocol is currently unsupported")
+elif args.attacker == True:
+    import opensvp.helper
+    # if not root...kick out
+    if not os.geteuid()==0:
+        sys.stderr.write("Need to be root to run the script\n")
+        sys.exit(1)
+    if args.helper == 'ftp':
+        target = opensvp.helper.ftp(args.iface, args.target, int(args.port), verbose=args.verbose)
+    elif args.helper == 'irc':
+        target = opensvp.helper.irc(args.iface, args.target, int(args.port), verbose=args.verbose)
+    elif args.helper == 'ftp6':
+        target = opensvp.helper.ftp6(args.iface, args.target, int(args.port), verbose=args.verbose)
+    else:
+        sys.exit("Selected protocol is currently unsupported")
 
 target.run()
