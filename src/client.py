@@ -66,7 +66,16 @@ class ftp(generic_client):
         (ipaddr, port) = self.conn.getsockname()
         return 'PORT %s,%d,%d\r\n' % (ipaddr.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
-class ftp6(generic_client):
+    def send_command(self):
+        self.conn.sendall('USER opensvp\r\n')
+        self.conn.recv(1024)
+        self.conn.sendall(self.message)
+        data = self.conn.recv(1024)
+        self.conn.close()
+        return data
+
+
+class ftp6(ftp):
     def __init__(self, iface, ip, port, verbose = False):
         generic_client.__init__(self, iface, ip, port, verbose)
         self.family = socket.AF_INET6

@@ -27,6 +27,7 @@ class generic_server:
         self.family = socket.AF_INET
         self.verbose = verbose
         self.conn = None
+        self.cconn = None
         self.message = None
         self.ip = ip
 
@@ -37,12 +38,15 @@ class generic_server:
         self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn.bind((self.ip, self.port))
         self.conn.listen(1)
-        conn, addr = self.conn.accept()
-        self.message = conn.recv(1024)        
+        self.cconn, addr = self.conn.accept()
+        self.negotiate()
         res = self.decode_command()
-        conn.sendall("%s:%d" %res)
-        conn.close()
+        self.cconn.sendall("%s:%d" %res)
+        self.cconn.close()
         self.conn.close()
+
+    def negotiate(self):
+        self.message = conn.recv(1024)
 
     def decode_command(self):
         return self.message
@@ -72,7 +76,12 @@ class ftp(generic_server):
         rsplit = r.group(1).split(',')
         return ('.'.join(rsplit[0:4]), int(rsplit[4]) * 256 + int(rsplit[5]))
 
-class ftp6(generic_server):
+    def negotiate(self):
+        self.cconn.recv(1024)
+        self.cconn.sendall('200 opensvp\r\n')
+        self.message = self.cconn.recv(1024)
+
+class ftp6(ftp):
     def __init__(self, ip, port, verbose = False):
         generic_server.__init__(self, ip, port, verbose)
         self.family = socket.AF_INET6
