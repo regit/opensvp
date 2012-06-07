@@ -29,7 +29,7 @@ class generic_helper:
         self.l3proto = 'IPv4'
         self.verbose = verbose
 
-    def build_filter(self):
+    def build_lfilter(self):
         return ""
 
     def build_command(self):
@@ -83,14 +83,14 @@ class generic_helper:
 
     def run(self):
         self.initialize()
-        sniff(iface=self.iface, prn=self.server_callback, filter=self.build_filter(), store=0, timeout=40)
+        sniff(iface=self.iface, prn=self.server_callback, lfilter=self.build_lfilter(), store=0, timeout=40)
 
 class ftp(generic_helper):
     def build_command(self):
         return "227 Entering Passive Mode (%s,%d,%d)\r\n" % (self.ip.replace('.',','), self.port >> 8 & 0xff, self.port & 0xff)
 
-    def build_filter(self):
-        return "src host %s and src port 21" % (self.ip)
+    def build_lfilter(self):
+        return lambda (r): TCP in r and r[TCP].sport == 21 and r[IP].src == self.ip
 
     def inject_condition(self,pkt):
         if re.match("^220",pkt.sprintf("%TCP.payload%")):
@@ -138,5 +138,5 @@ class irc(generic_helper):
         return ipn
     def build_command(self):
         return 'PRIVMSG opensvp :\x01DCC CHAT CHAT %d %d\x01\r\n' % (self.ipnumber(self.ip), self.port)
-    def build_filter(self):
-        return "tcp and src host %s and dst port 6667" % (self.ip)
+    def build_lfilter(self):
+        return lambda (r): TCP in r and r[TCP].dport == 6667 and r[IP].src == self.ip
