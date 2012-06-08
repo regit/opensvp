@@ -46,7 +46,7 @@ class generic_server:
         self.conn.close()
 
     def negotiate(self):
-        self.message = conn.recv(1024)
+        self.message = self.cconn.recv(1024)
 
     def decode_command(self):
         return self.message
