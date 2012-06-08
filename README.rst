@@ -164,13 +164,13 @@ filtering has to be activated and a ESTABLISHED ACCEPT rules has to be set up on
 this chain. This could be the case of system running virtual machine.
 
 Defense against the attack
---------------------------
+==========================
 Linux
-~~~~~
+-----
 
 See the following document which is dedicated to the subject: https://home.regit.org/netfilter-en/secure-use-of-helpers/
 
 Other OS and devices
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 The basic requirement is to activate strict anti-spoofing and to control the loading of ALG is possible.
