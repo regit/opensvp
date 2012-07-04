@@ -72,6 +72,22 @@ On the server, the following message is displayed ::
 
 Here 2.3.4.5 is the public address of the client.
 
+TTL attack on DPI solution
+--------------------------
+
+On the attacker, you need to start the opensvp and indicate what is the used
+Netfilter queue and what is the output interface ::
+
+ # opensvp -n -q 0 -i eth1
+
+You then need to use iptables to userspace the trafic you want to hide to protocol
+recognition mechanism ::
+
+ iptables -I INPUT -p tcp --sport 443 -j NFQUEUE
+ iptables -I OUTPUT -p tcp --dport 443 -j NFQUEUE
+
+When you're done, press CTRL+C to interrupt the attack process.
+
 Description of the attack against helper
 ========================================
 Principle

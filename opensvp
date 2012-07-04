@@ -22,12 +22,14 @@ parser = argparse.ArgumentParser(description='Open selected pin hole in firewall
 parser.add_argument('-a', '--attacker', default=False, action="store_true", help='Work in attacker mode (spoofing attack)')
 parser.add_argument('-s', '--server', default=False, action="store_true", help='Work in server mode')
 parser.add_argument('-c', '--client', default=False, action="store_true", help='Work in client mode')
+parser.add_argument('-n', '--nodpi', default=False, action="store_true", help='Work in DPI hiding mode')
 parser.add_argument('-d', '--decode', default=False, help='Decode protocol message to extract IP params')
 parser.add_argument('-t', '--target', default='192.168.2.2', help='IP address of target to attack')
 parser.add_argument('-b', '--bind', default='', help='IP address to bind to')
 parser.add_argument('-l', '--lport', default='', help='Port where server is listening')
 parser.add_argument('-i', '--iface', default='eth0', help='Interface to use for sniffing communication')
 parser.add_argument('-p', '--port', default=5432, help='Target port that should be open on server after attack')
+parser.add_argument('-q', '--queue', default=0, help='Netfilter queue to use in nodpi mode')
 parser.add_argument('-v', '--verbose', default=False, action="store_true", help="Show verbose output")
 parser.add_argument('--helper', default='ftp', help='Protocol and helper to attack (ftp [default], ftp6, irc)')
 args = parser.parse_args()
@@ -35,7 +37,7 @@ args = parser.parse_args()
 if args.helper not in ['ftp', 'ftp6', 'irc']:
     sys.exit("Selected protocol '%s' is not supported" % (args.helper))
 
-if not (args.client == True or args.attacker == True or args.server == True):
+if not (args.client == True or args.attacker == True or args.server == True or args.nodpi == True):
     sys.exit("At least one mode should be used")
 
 if args.server == True:
@@ -91,6 +93,19 @@ elif args.attacker == True:
         target = opensvp.helper.ftp6(args.iface, args.target, int(args.port), verbose=args.verbose)
     else:
         sys.exit("Selected protocol is currently unsupported")
+elif args.nodpi == True:
+    if args.server or args.client:
+        sys.exit("Server, client, attacker mode are exclusive: leaving")
+    import opensvp.nodpi
+    # if not root...kick out
+    if not os.geteuid()==0:
+        sys.stderr.write("Need to be root to run the script\n")
+        sys.exit(1)
+    target = opensvp.nodpi.http_nodpi(args.iface, queue=int(args.queue), verbose=args.verbose)
+
+
+if args.nodpi == True:
+    print "Press CTRL+C to interrupt"
 
 ret = target.run()
 if ret is None:

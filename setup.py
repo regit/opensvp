@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name='opensvp',
-      version='0.4',
+      version='0.5',
       description='Firewall and application layer gateway testing tool',
       author='Eric Leblond',
       author_email='eric@regit.org',
