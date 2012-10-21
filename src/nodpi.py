@@ -76,7 +76,10 @@ class generic_nodpi:
             del pkt[IP].chksum
             del pkt[TCP].chksum
             del pkt[IP].len
-            sendp(pkt, iface=self.iface)
+            if self.verbose:
+                sendp(pkt, iface=self.iface)
+            else:
+                sendp(pkt, iface=self.iface, verbose=0)
         if self.verbose:
             print "Packet accepted\n"
         payload.set_verdict(nfqueue.NF_ACCEPT)
