@@ -89,42 +89,42 @@ class generic_nodpi:
         q = nfqueue.queue()
 
         if self.verbose:
-            print "open"
+            print "NFQ: open"
         q.open()
 
         if self.verbose:
-            print "bind"
+            print "NFQ: bind"
         q.bind(AF_INET)
 
-        #print "setting callback (should fail, wrong arg type)"
+        #print "NFQ: setting callback (should fail, wrong arg type)"
         #try:
         #	q.set_callback("blah")
         #except TypeError, e:
-        #	print "type failure (expected), continuing"
+        #	print "NFQ: type failure (expected), continuing"
 
         if self.verbose:
-            print "setting callback"
+            print "NFQ: setting callback"
         q.set_callback(self.cb)
 
         if self.verbose:
-            print "creating queue"
+            print "NFQ: creating queue"
         q.create_queue(self.queue)
 
         q.set_queue_maxlen(50000)
 
         if self.verbose:
-            print "trying to run"
+            print "NFQ: trying to run"
         try:
             q.try_run()
         except KeyboardInterrupt, e:
-            print "interrupted"
+            print "NFQ: interrupted"
 
         if self.verbose:
-            print "unbind"
+            print "NFQ: unbind"
         q.unbind(AF_INET)
 
         if self.verbose:
-            print "close"
+            print "NFQ: close"
         q.close()
 
 class http_nodpi(generic_nodpi):
