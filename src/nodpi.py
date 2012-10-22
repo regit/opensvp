@@ -54,7 +54,10 @@ class generic_nodpi:
 
         data = payload.get_data()
         # TODO handle IPv6.
-        pkt = Ether()/IP(data)
+        if "tun" not in self.iface:
+            pkt = Ether()/IP(data)
+        else:
+            pkt = IP(data)
 
         if pkt[IP].proto != 6:
             return 1
