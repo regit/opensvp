@@ -96,12 +96,6 @@ class generic_nodpi:
             print "NFQ: bind"
         q.bind(AF_INET)
 
-        #print "NFQ: setting callback (should fail, wrong arg type)"
-        #try:
-        #	q.set_callback("blah")
-        #except TypeError, e:
-        #	print "NFQ: type failure (expected), continuing"
-
         if self.verbose:
             print "NFQ: setting callback"
         q.set_callback(self.cb)
