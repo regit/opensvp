@@ -59,7 +59,7 @@ class generic_nodpi:
         if pkt[IP].proto != 6:
             return 1
 
-        if pkt[TCP].flags == 'SA':
+        if pkt[TCP].flags == 18:
             self.ttl = pkt[IP].ttl
 
         if pkt[TCP].flags == 'S':
