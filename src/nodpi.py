@@ -62,7 +62,7 @@ class generic_nodpi:
         if pkt[TCP].flags == 18:
             self.ttl = pkt[IP].ttl
 
-        if pkt[TCP].flags == 'S':
+        if pkt[TCP].flags == 2:
             try:
                 # Here we must get the TTL
                 del self.conn_dict[ptk[TCP].sport]
