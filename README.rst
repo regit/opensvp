@@ -5,8 +5,8 @@ Opensvp
 Introduction
 ============
 
-Opensvp is a security tool implementing "attacks" to be able to the
-resistance of firewall to protocol level attack. It implements
+Opensvp is a security tool implementing "attacks" to be able to test
+the resistance of firewall to protocol level attack. It implements
 classic attacks as well as some new kind of attacks against application
 layer gateway (called helper in the Netfilter world).
 
